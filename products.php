@@ -31,20 +31,20 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="control-label">Name</label>
+                                <label class="control-label h6">Name</label>
                                 <input type="text" class="form-control" name="name">
                             </div>
                             <div class="form-group">
-                                <label class="control-label">Description</label>
+                                <label class="control-label h6">Description</label>
                                 <textarea name="description" id="description" cols="30" rows="4" class="form-control"></textarea>
                             </div>
                             <div class="form-group">
-                                <label class="control-label">Price</label>
+                                <label class="control-label h6">Price</label>
                                 <input type="number" class="form-control text-right" name="price">
                             </div>
                             <div class="form-group">
                                 <label class="control-label">Item ID</label>
-                                <input type="number" class="form-control text-right" name="item-id">
+                                <input type="number" class="form-control text-right" id="item_id" name="item-id">
                             </div>
                             <div class="form-group">
                                 <div class="custom-control custom-switch">
@@ -99,6 +99,7 @@
 									<td class="">
 										<p>Name: <b><?php echo $row['name'] ?></b></p>
 										<p><small>Price: <b><?php echo number_format($row['price'],2) ?></b></small></p>
+                                        <p><small>Item ID: <b><?php echo number_format($row['item_id']) ?></b></small></p>
 										<p><small>Status: <b><?php echo $row['status'] == 1 ? " Available" : "Unavailable" ?></b></small></p>
 										<p><small>Description: <b><?php echo $row['description'] ?></b></small></p>
 									</td>
@@ -147,7 +148,7 @@
 		$.ajax({
 			url:'ajax.php?action=save_product',
 			data: new FormData($(this)[0]),
-		    cache: false,
+		    cache: false,                     
 		    contentType: false,
 		    processData: false,
 		    method: 'POST',
@@ -176,7 +177,6 @@
 		cat.get(0).reset()
 		cat.find("[name='id']").val($(this).attr('data-id'))
 		cat.find("[name='name']").val($(this).attr('data-name'))
-        cat.find("[name='item_id']").val($(this).attr('item-id'))
 		cat.find("[name='description']").val($(this).attr('data-description'))
 		cat.find("[name='price']").val($(this).attr('data-price'))
 		cat.find("[name='category_id']").val($(this).attr('data-category_id')).trigger('change')
