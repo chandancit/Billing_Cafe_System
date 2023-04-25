@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 ini_set('display_errors', 1);
 Class Action {
@@ -221,7 +222,7 @@ Class Action {
 	function save_product(){
 		extract($_POST);
 		$data = "";
-		foreach($_POST as $k => $v){
+       		foreach($_POST as $k => $v){
 			if(!in_array($k, array('id','status')) && !is_numeric($k)){
 				if($k == 'price'){
 					$v= str_replace(',', '', $v);
@@ -244,6 +245,8 @@ Class Action {
 			exit;
 		}
 		if(empty($id)){
+            $data .= "'item_id' = '50'";
+            var_dump($data);
 			$save = $this->db->query("INSERT INTO products set $data");
 		}else{
 			$save = $this->db->query("UPDATE products set $data where id = $id");
@@ -275,6 +278,7 @@ Class Action {
 				}
 			}
 			$data .= ", ref_no = '$ref_no' ";
+            $data .= ", expense = '$total_expense'";
 			$save = $this->db->query("INSERT INTO orders set $data");
 			if($save){
 				$id = $this->db->insert_id;
