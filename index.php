@@ -1,223 +1,493 @@
-<!DOCTYPE html>
-<html lang="en">
-	
-<?php
-    session_start();
-?>
-<head>
+<?php include '../db_connect.php' ?>
+<?php 
 
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title><?php echo isset($_SESSION['system']['name']) ? $_SESSION['system']['name'] : '' ?></title>
-        
-
-<?php
-    if(!isset($_SESSION['login_id']))
-        header('location:login.php');
-    include('./header.php'); 
-    // include('./auth.php'); 
-?>
-</head>
+try {
+    // Code that may throw an exception
+} catch (Exception $e) {
+    // Display an error message to the user
+    echo "An error occurred: " . $e->getMessage();
+}
+?>  
 
 <style>
-	body{
-        background: #80808045;
+    span.float-right.summary_icon {
+    font-size: 3rem;
+    position: absolute;
+    right: 1rem;
+    top: 0;
     }
-    .modal-dialog.large {
-        width: 80% !important;
-        max-width: unset;
+    .bg-gradient-primary{
+        background: rgb(119,172,233);
+        background: linear-gradient(149deg, rgba(119,172,233,1) 5%, rgba(83,163,255,1) 10%, rgba(46,51,227,1) 41%, rgba(40,51,218,1) 61%, rgba(75,158,255,1) 93%, rgba(124,172,227,1) 98%);
     }
-    .modal-dialog.mid-large {
-        width: 50% !important;
-        max-width: unset;
+    .btn-primary-gradient{
+        background: linear-gradient(to right, #1e85ff 0%, #00a5fa 80%, #00e2fa 100%);
     }
-    #viewer_modal .btn-close {
+    .btn-danger-gradient{
+        background: linear-gradient(to right, #f25858 7%, #ff7840 50%, #ff5140 105%);
+    }
+    main .card{
+        height:calc(100%);
+    }
+    main .card-body{
+        height:calc(100%);
+        overflow: auto;
+        padding: 5px;
+    }
+    .cdiv{
+        max-height: 470px;
+        min-height: 200px;
+    }
+    main .container-fluid, main .container-fluid>.row,main .container-fluid>.row>div{
+        height:calc(100%);
+    }
+    #o-list{
+        height: calc(87%);
+        overflow: auto;
+    }
+    #calc{
         position: absolute;
-        z-index: 999999;
-        /*right: -4.5em;*/
-        background: unset;
-        color: white;
-        border: unset;
-        font-size: 27px;
-        top: 0;
+        bottom: 1rem;
+        height: calc(10%);
+        width: calc(98%);
     }
-    #viewer_modal .modal-dialog {
-            width: 80%;
-        max-width: unset;
-        height: calc(90%);
-    max-height: unset;
+    .prod-item{
+        min-height: 9vh;
+        cursor: pointer;
     }
-    #viewer_modal .modal-content {
-        background: black;
-        border: unset;
-        height: calc(100%);
+    .prod-item:hover{
+        opacity: .8;
+    }
+    .prod-item .card-body {
         display: flex;
-        align-items: center;
         justify-content: center;
+        align-items: center;
+
     }
-    #viewer_modal img,#viewer_modal video{
-        max-height: calc(100%);
-        max-width: calc(100%);
+    input[name="qty[]"]{
+        width: 30px;
+        text-align: center
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #cat-list{
+        height: calc(100%)
+    }
+    .cat-item{
+        cursor: pointer;
+    }
+    .cat-item:hover{
+        opacity: .8;
+    }
+    .Category-item{
+        height: 750px;
+        min-height: 100px;
+        overflow-y: scroll;
     }
 </style>
 
-<body>
-	<?php include 'topbar.php' ?>
-	<?php include 'navbar.php' ?>
+<?php 
+    if(isset($_GET['id'])):
+        $order = $conn->query("SELECT * FROM orders where id = {$_GET['id']}");
+    foreach($order->fetch_array() as $k => $v){
+        $$k= $v;
+    }
+    $items = $conn->query("SELECT o.*,p.name FROM order_items o inner join products p on p.id = o.product_id where o.order_id = $id ");
+        endif;
+?>
 
-    <div class="toast" id="alert_toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-body text-white">
-
-        </div>
-    </div>
-  
-    <main id="view-panel" >
-        <?php $page = isset($_GET['page']) ? $_GET['page'] :'home'; ?>
-        <?php include $page.'.php' ?>
-        
-
-    </main>
-
-    <div id="preloader"></div>
-    <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
-
-    <div class="modal fade" id="confirm_modal" role='dialog'>
-        <div class="modal-dialog modal-md" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmation</h5>
+<div class="container-fluid o-field">
+    <div class="row mt-3 ml-3 mr-3">
+        <div class="col-lg-4">
+            <div class="card bg-light border-dark">
+                <div class="card-header text-dark  border-dark">
+                    <b>Order List</b>
+                    <span class="float:right">
+                        <!-- <a class="btn btn-warning btn-sm col-sm-3 float-right" href="../index.php" id="">
+                            <i class="fa fa-home"></i> Home
+                        </a> -->
+                    </span>
                 </div>
-                <div class="modal-body">
-                    <div id="delete_content">
-                        
+                <div class="card-body cdiv">
+                    <form action="" id="manage-order">
+                        <input type="hidden" name="id" value="<?php echo isset($_GET['id']) ? $_GET['id'] : '' ?>">
+                        <div class="bg-white" id='o-list'>
+                            <div class="d-flex w-100  mb-1">
+                                <label for="" class="text-dark h6 pt-1"><b>Table No.</b></label>
+                                <input type="number" class="form-control-sm" name="order_number" value="<?php echo isset($order_number) ? $order_number : '' ?>">
+                            </div>
+                            <table class="table table-bordered bg-warning">
+                                <colgroup>
+                                    <col width="20%">
+                                    <col width="40%">
+                                    <col width="40%">
+                                    <col width="5%">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>QTY</th>
+                                        <th>Order</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    // Make sure $items is defined and has data before looping through it
+                                    if(isset($items) && $items->num_rows > 0):
+                                        while($row=$items->fetch_assoc()):
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex">
+                                                <span class="btn btn-sm btn-secondary btn-minus"><b><i class="fa fa-minus"></i></b></span>
+                                                <input type="number" name="qty[]" id="" value="<?php echo $row['qty'] ?>">
+                                                <span class="btn btn-sm btn-secondary btn-plus"><b><i class="fa fa-plus"></i></b></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" name="item_id[]" id="" value="<?php echo $row['id'] ?>">
+                                                <input type="hidden" name="product_id[]" id="" value="<?php echo $row['product_id'] ?>"><?php echo ucwords($row['name']) ?>
+                                                <small class="psmall"> (<?php echo number_format($row['price'],2) ?>)</small>
+                                            </td>
+                                            <td class="text-right">
+                                                <input type="hidden" name="price[]" id="" value="<?php echo $row['price'] ?>">
+                                                <input type="hidden" name="amount[]" id="" value="<?php echo $row['amount'] ?>">
+                                                <span class="amount"><?php echo number_format($row['amount'],2) ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="btn btn-sm btn-danger btn-rem"><b><i class="fa fa-times text-white"></i></b></span>
+                                            </td>
+                                    </tr>
+                                    <script>
+                                        $(document).ready(function(){
+                                            qty_func()
+                                                calc()
+                                                cat_func();
+                                        })
+                                    </script>
+                                    <?php endwhile; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class=" card-footer d-block bg-white" id="calc">
+                            <table class="" width="100%">
+                                <tbody>
+                                    <tr class="bg-warning text-dark">
+                                        <td>
+                                            <b><h4>Total</h4></b>
+                                        </td>
+                                        <td class="text-right">
+                                            <input type="hidden" name="total_amount" value="0">
+                                            <input type="hidden" name="total_tendered" value="0">
+                                            <input type="hidden" name = "total_expense" value="0"
+                                            <span class=""><h4><b id="total_amount">0.00</b></h4></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8  p-field">
+            <div class="card border-dark">
+                <div class="card-header d-flex text-dark  border-dark">
+                    <div class="w-50">
+                        <b class="badge bg-warning text-dark p-2 ">Products</b>
+                    </div>
+                    <div class="w-50 align-item-center">
+                    <b class="badge bg-warning text-dark p-2 ">Item No</b>
+                    <input type="number" name = "item_no" id = "item_no"class="form-control-sm">
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id='confirm' onclick="">Continue</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <div class="card-body d-flex" id='prod-list'>
+                    <div class="col-md-3">
+                        <div class="w-100 pr-0 bg-dark text-center pt-2 pb-2 rounded Category-item"  id="cat-list">
+                            <b class="pt-3 text-white top-fixed">Category</b>
+                            <hr>
+                            <div class="card bg-warning mx-3 mb-2 cat-item" style="height:auto !important;" data-id = 'all'>
+                                <div class="card-body">
+                                    <span>
+                                        <b class="text-dark">All</b>
+                                    </span>
+                                </div>
+                            </div>
+                            <?php 
+                                $qry = $conn->query("SELECT * FROM categories order by name asc");
+                                while($row=$qry->fetch_assoc()):
+                            ?>
+                            <div class="card bg-warning mx-3 mb-2 cat-item" style="height:auto !important;" data-id = '<?php echo $row['id'] ?>'>
+                                <div class="card-body">
+                                    <span>
+                                        <b class="text-dark"><?php echo ucwords($row['name']) ?></b>
+                                    </span>
+                                </div>
+                            </div>
+                            <?php endwhile; ?>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <hr>
+                        <div class="row">
+                            <?php
+                                $prod = $conn->query("SELECT * FROM products where status = 1 order by name asc");
+                                while($row=$prod->fetch_assoc()):
+                            ?>
+                            <div class="col-md-4 mb-2">
+                                <div class="card bg-warning prod-item" data-json = '<?php echo json_encode($row) ?>' data-category-id="<?php echo $row['category_id'] ?>" product_item_no="<?php echo $row['item_no'] ?>">
+                                    <div class="card-body">
+                                        <span>
+                                            <b class="text-danger"><h5><?php echo $row['name'] ?></h5></b>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endwhile; ?>
+                        </div>
+                    </div>   
                 </div>
+                <div class="card-footer bg-warning  border-primary">
+                    <div class="row justify-content-center">
+                        <div class="btn btn btn-sm col-sm-3 btn-success mr-2" type="button" id="pay">Pay</div>
+                        <div class="btn btn btn-sm col-sm-3 btn-danger"" type="button" id="save_order">Pay later</div>
+                    </div>
+                </div>
+            </div>      			
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="pay_modal" role='dialog'>
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><b>Pay</b></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="form-group">
+                        <label for="">Amount Payable</label>
+                        <input type="text" class="form-control text-right" id="apayable" readonly="" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="">Amount Tendered</label>
+                        <input type="text" class="form-control text-right" id="tendered" value="" autocomplete="off">
+                    </div>
+                    <label for="">Payment</label>
+                    <select class="form-select form-control mb-2" aria-label="Default select example">
+                        <option value="1">Cash</option>
+                        <option value="2">Online</option>
+                    </select>
+                    <div class="form-group">
+                        <label for="">Expense</label>
+                        <input type="text" class="form-control text-right" id="expense" value="" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="">Change</label>
+                        <input type="text" class="form-control text-right" id="change" value="0.00" readonly="">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn-sm"  form="manage-order">Pay</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="modal fade" id="uni_modal" role='dialog'>
-        <div class="modal-dialog modal-md" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"></h5>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id='submit' onclick="$('#uni_modal form').submit()">Save</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="viewer_modal" role='dialog'>
-        <div class="modal-dialog modal-md" role="document">
-            <div class="modal-content">
-                    <button type="button" class="btn-close" data-dismiss="modal"><span class="fa fa-times"></span></button>
-                    <img src="" alt="">
-            </div>
-        </div>
-    </div>
-
-</body>
 
 <script>
-        window.start_load = function(){
-        $('body').prepend('<di id="preloader2"></di>')
-    }
-    window.end_load = function(){
-        $('#preloader2').fadeOut('fast', function() {
-            $(this).remove();
-        })
-    }
-    window.viewer_modal = function($src = ''){
-        start_load()
-        var t = $src.split('.')
-        t = t[1]
-        if(t =='mp4'){
-        var view = $("<video src='"+$src+"' controls autoplay></video>")
-        }else{
-        var view = $("<img src='"+$src+"' />")
-        }
-        $('#viewer_modal .modal-content video,#viewer_modal .modal-content img').remove()
-        $('#viewer_modal .modal-content').append(view)
-        $('#viewer_modal').modal({
-                show:true,
-                backdrop:'static',
-                keyboard:false,
-                focus:true
-            })
-            end_load()  
+    var total;
+        cat_func();
+        $('#prod-list .prod-item').click(function(){
+            var data = $(this).attr('data-json')
+                data = JSON.parse(data)
+            if($('#o-list tr[data-id="'+data.id+'"]').length > 0){
+                var tr = $('#o-list tr[data-id="'+data.id+'"]')
+                var qty = tr.find('[name="qty[]"]').val();
+                    qty = parseInt(qty) + 1;
+                    qty = tr.find('[name="qty[]"]').val(qty).trigger('change')
+                    calc()
+                return false;
+            }
+            var tr = $('<tr class="o-item"></tr>')
+            tr.attr('data-id',data.id)
+            tr.append('<td><div class="d-flex"><span class="btn btn-sm btn-secondary btn-minus"><b><i class="fa fa-minus"></i></b></span><input type="number" name="qty[]" id="" value="1"><span class="btn btn-sm btn-secondary btn-plus"><b><i class="fa fa-plus"></i></b></span></div></td>') 
+            tr.append('<td><input type="hidden" name="item_id[]" id="" value=""><input type="hidden" name="product_id[]" id="" value="'+data.id+'">'+data.name+' <small class="psmall">('+(parseFloat(data.price).toLocaleString("en-US",{style:'decimal',minimumFractionDigits:2,maximumFractionDigits:2}))+')</small></td>') 
+            tr.append('<td class="text-right"><input type="hidden" name="price[]" id="" value="'+data.price+'"><input type="hidden" name="amount[]" id="" value="'+data.price+'"><span class="amount">'+(parseFloat(data.price).toLocaleString("en-US",{style:'decimal',minimumFractionDigits:2,maximumFractionDigits:2}))+'</span></td>') 
+            tr.append('<td><span class="btn btn-sm btn-danger btn-rem"><b><i class="fa fa-times text-white"></i></b></span></td>')
+            $('#o-list tbody').append(tr)
+            qty_func()
+            calc()
+            cat_func();
+    })
 
+function qty_func(){
+    $('#o-list .btn-minus').unbind('click').click(function(){
+        var qty = $(this).siblings('input').val()
+        qty = qty > 1 ? parseInt(qty) - 1 : 1;
+        $(this).siblings('input').val(qty).trigger('change')
+        calc()
+    })
+    $('#o-list .btn-plus').unbind('click').click(function(){
+        var qty = $(this).siblings('input').val()
+        qty = parseInt(qty) + 1;
+        $(this).siblings('input').val(qty).trigger('change')
+        calc()
+    })
+    $('#o-list .btn-rem').click(function(){
+            $(this).closest('tr').remove()
+            calc()
+            })   
+}
+
+    function calc(){
+            $('[name="qty[]"]').each(function(){
+            $(this).change(function(){
+                var tr = $(this).closest('tr');
+                var qty = $(this).val();
+                var price = tr.find('[name="price[]"]').val()
+                var amount = parseFloat(qty) * parseFloat(price);
+                    tr.find('[name="amount[]"]').val(amount)
+                    tr.find('.amount').text(parseFloat(amount).toLocaleString("en-US",{style:'decimal',minimumFractionDigits:2,maximumFractionDigits:2}))
+                
+            })
+            })
+            var total = 0;
+            $('[name="amount[]"]').each(function(){
+            total = parseFloat(total) + parseFloat($(this).val()) 
+            })
+            console.log(total)
+        $('[name="total_amount"]').val(total)
+        $('#total_amount').text(parseFloat(total).toLocaleString("en-US",{style:'decimal',minimumFractionDigits:2,maximumFractionDigits:2}))
     }
-    window.uni_modal = function($title = '' , $url='',$size=""){
-        start_load()
-        $.ajax({
-            url:$url,
-            error:err=>{
-                console.log()
-                alert("An error occured")
-            },
-            success:function(resp){
-                if(resp){
-                    $('#uni_modal .modal-title').html($title)
-                    $('#uni_modal .modal-body').html(resp)
-                    if($size != ''){
-                        $('#uni_modal .modal-dialog').addClass($size)
+    
+    function cat_func(){
+        $('.cat-item').click(function(){
+            var id = $(this).attr('data-id')
+            console.log(id)
+            if(id == 'all'){
+                $('.prod-item').parent().toggle(true)
+            }else{
+                $('.prod-item').each(function(){
+                    if($(this).attr('data-category-id') == id){
+                        $(this).parent().toggle(true)
                     }else{
-                        $('#uni_modal .modal-dialog').removeAttr("class").addClass("modal-dialog modal-md")
+                        $(this).parent().toggle(false)
                     }
-                    $('#uni_modal').modal({
-                    show:true,
-                    backdrop:'static',
-                    keyboard:false,
-                    focus:true
-                    })
-                    end_load()
-                }
+                })
             }
         })
     }
-    window._conf = function($msg='',$func='',$params = []){
-        $('#confirm_modal #confirm').attr('onclick',$func+"("+$params.join(',')+")")
-        $('#confirm_modal .modal-body').html($msg)
-        $('#confirm_modal').modal('show')
+    function isEmpty(value) {
+        return (value == null || (typeof value === "string" && value.trim().length === 0));
     }
-    window.alert_toast= function($msg = 'TEST',$bg = 'success'){
-        $('#alert_toast').removeClass('bg-success')
-        $('#alert_toast').removeClass('bg-danger')
-        $('#alert_toast').removeClass('bg-info')
-        $('#alert_toast').removeClass('bg-warning')
+        $('#item_no').keyup('input',function(e){
+                var itemNo = $("#item_no").val()
+            console.log(itemNo)
+            if (!isEmpty(itemNo)) {
+                                    $('.prod-item').each(function(){
+                    if($(this).attr('product_item_no') == itemNo){
+                        $(this).parent().toggle(true)
+                    }else{
+                        $(this).parent().toggle(false)
+                    }
+                })
+            }
 
-        if($bg == 'success')
-        $('#alert_toast').addClass('bg-success')
-        if($bg == 'danger')
-        $('#alert_toast').addClass('bg-danger')
-        if($bg == 'info')
-        $('#alert_toast').addClass('bg-info')
-        if($bg == 'warning')
-        $('#alert_toast').addClass('bg-warning')
-        $('#alert_toast .toast-body').html($msg)
-        $('#alert_toast').toast({delay:3000}).toast('show');
+    })
+    $('#save_order').click(function(){
+    $('#tendered').val('').trigger('change')
+    $('[name="total_tendered"]').val('')
+    $('#manage-order').submit()
+    })
+    $("#pay").click(function(){
+    start_load()
+    var amount = $('[name="total_amount"]').val()
+    $('[name="total_tendered"]').val(amount)
+    if($('#o-list tbody tr').length <= 0){
+        alert_toast("Please add atleast 1 product first.",'danger')
+        end_load()
+        return false;
     }
-    $(document).ready(function(){
-        $('#preloader').fadeOut('fast', function() {
-            $(this).remove();
+    $('#apayable').val(parseFloat(amount).toLocaleString("en-US",{style:'decimal',minimumFractionDigits:2,maximumFractionDigits:2}))
+    $('#pay_modal').modal('show')
+    setTimeout(function(){
+        $('#tendered').val('').trigger('change')
+        $('#tendered').focus()
+        end_load()
+    },1000)
+
+    })
+
+    $('#tendered').keyup('input',function(e){
+        if(e.which == 13){
+            $('#manage-order').submit();
+            return false;
+        }
+        var tend = $(this).val()
+            tend =tend.replace(/,/g,'') 
+        $('[name="total_tendered"]').val(tend)
+        if(tend == '')
+            $(this).val('')
+        else
+            $(this).val((parseFloat(tend).toLocaleString("en-US")))
+        tend = tend > 0 ? tend : 0;
+        var amount=$('[name="total_amount"]').val()
+        var change = parseFloat(tend) - parseFloat(amount)
+        $('#change').val(parseFloat(change).toLocaleString("en-US",{style:'decimal',minimumFractionDigits:2,maximumFractionDigits:2}))
+    })
+
+    $('#tendered').on('input',function(){
+        var val = $(this).val()
+        val = val.replace(/[^0-9 \,]/, '');
+        $(this).val(val)
+    })
+    $('#expense').on('input',function(){
+        var val = $(this).val()
+        $('[name="total_expense"]').val(val);
+        
+    })
+    $('#manage-order').submit(function(e){
+        e.preventDefault();
+        start_load()
+        $.ajax({
+            url:'../ajax.php?action=save_order',
+            method:'POST',
+            data:$(this).serialize(),
+            success:function(resp){
+                if(resp > 0){
+                    if($('[name="total_tendered"]').val() > 0){
+                        alert_toast("Data successfully saved.",'success')
+                        setTimeout(function(){
+                            var nw = window.open('../receipt.php?id='+resp,"_blank","width=900,height=600")
+                            setTimeout(function(){
+                                nw.print()
+                                setTimeout(function(){
+                                    nw.close()
+                                    location.reload()
+                                },500)
+                            },500)
+                        },500)
+                    }else{
+                        alert_toast("Data successfully saved.",'success')
+                        setTimeout(function(){
+                            location.reload()
+                        },500)
+                    }
+                }
+            }
         })
     })
-    $('.datetimepicker').datetimepicker({
-        format:'Y/m/d H:i',
-        startDate: '+3d'
-    })
-    $('.select2').select2({
-        placeholder:"Please select here",
-        width: "100%"
-    })
-</script>	
-</html>
+
+</script>
